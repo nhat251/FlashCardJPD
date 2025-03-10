@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Nhật Ôn Tiếng Nhật</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .flashcard {
+            width: 800px;
+            /* Tăng kích thước flashcard */
+            height: 700px;
+            /* Tăng kích thước flashcard */
+            perspective: 1000px;
+            cursor: pointer;
+        }
+
+        .card-inner {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transition: transform 0.6s, opacity 0.6s;
+            /* Thêm hiệu ứng mờ dần */
+            transform-style: preserve-3d;
+        }
+
+        .flashcard.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .card-front,
+        .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            font-size: 32px;
+            /* Tăng kích thước font chữ */
+            text-align: center;
+        }
+
+        .card-front {
+            background-color: #f8f9fa;
+        }
+
+        .card-back {
+            background-color: #ffebcd;
+            transform: rotateY(180deg);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .progress-container {
+            width: 80%;
+            /* Giảm kích thước chiều rộng */
+            background-color: #f3f3f3;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            position: relative;
+        }
+
+        .progress-bar {
+            height: 10px;
+            /* Giảm kích thước chiều cao */
+            background-color: #4caf50;
+            width: 0%;
+            border-radius: 5px;
+            transition: width 0.3s;
+        }
+
+        .progress-text {
+            position: absolute;
+            top: -25px;
+            /* Điều chỉnh vị trí của số tiến độ */
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body class="d-flex flex-column align-items-center mt-5">
+    <header class="mb-4">
+        <h1>Nhật Ôn Tiếng Nhật</h1>
+    </header>
+    <div class="progress-container">
+        <div class="progress-bar" id="progressBar"></div>
+        <div class="progress-text" id="progressText">1 / 72</div>
+    </div>
+
+    <div class="d-flex align-items-center">
+        <button class="btn btn-secondary me-3" onclick="prevCard()">&#8592; Trước</button>
+        <div class="flashcard" onclick="flipCard()">
+            <div class="card-inner">
+                <div class="card-front" id="kanji">東</div>
+                <div class="card-back" id="meaning">ひがし - phía đông</div>
+            </div>
+        </div>
+        <button class="btn btn-secondary ms-3" onclick="nextCard()">Tiếp &#8594;</button>
+    </div>
+    <button class="btn btn-primary mt-3" onclick="toggleTable()">Hiển thị tất cả từ vựng</button>
+
+    <div class="mt-5 hidden" id="wordTableContainer">
+        <h2>Tất cả từ vựng</h2>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>STT</th>
+                    <th>Kanji</th>
+                    <th>Hira</th>
+                    <th>Nghĩa</th>
+                </tr>
+            </thead>
+            <tbody id="wordTable">
+                <!-- Rows will be inserted here by JavaScript -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const words = [
+            { kanji: "東", hira: "ひがし", meaning: "phía đông" },
+            { kanji: "東京", hira: "とうきょう", meaning: "Tokyo" },
+            { kanji: "午前", hira: "ごぜん", meaning: "a.m" },
+            { kanji: "前日", hira: "ぜんじつ", meaning: "ngày trước đó" },
+            { kanji: "名前", hira: "なまえ", meaning: "tên" },
+            { kanji: "国", hira: "くに", meaning: "đất nước, quốc gia" },
+            { kanji: "外国", hira: "がいこく", meaning: "nước ngoài" },
+            { kanji: "男の人", hira: "おとこのひと", meaning: "người đàn ông" },
+            { kanji: "女の人", hira: "おんなのひと", meaning: "người phụ nữ" },
+            { kanji: "～区", hira: "～く", meaning: "quận ~" },
+            { kanji: "～市", hira: "～し", meaning: "thành phố ~" },
+            { kanji: "前", hira: "まえ", meaning: "phía trước" },
+            { kanji: "京都", hira: "きょうと", meaning: "Kyoto" },
+            { kanji: "外国人", hira: "がいこくじん", meaning: "người nước ngoài" },
+            { kanji: "先生", hira: "せんせい", meaning: "thầy/cô giáo" },
+            { kanji: "先日", hira: "せんじつ", meaning: "vài ngày trước" },
+            { kanji: "先月", hira: "せんげつ", meaning: "tháng trước" },
+            { kanji: "先週", hira: "せんしゅう", meaning: "tuần trước" },
+            { kanji: "一週間", hira: "いっしゅうかん", meaning: "1 tuần" },
+            { kanji: "毎日", hira: "まいにち", meaning: "mỗi ngày" },
+            { kanji: "毎週", hira: "まいしゅう", meaning: "mỗi tuần" },
+            { kanji: "毎年", hira: "まいとし / まいねん", meaning: "mỗi năm" },
+            { kanji: "後ろ", hira: "うしろ", meaning: "phía sau" },
+            { kanji: "後", hira: "あと", meaning: "sau đó" },
+            { kanji: "午後", hira: "ごご", meaning: "p.m" },
+            { kanji: "前後", hira: "ぜんご", meaning: "trước sau" },
+            { kanji: "見ます", hira: "みます", meaning: "nhìn" },
+            { kanji: "見学", hira: "けんがく", meaning: "tham quan kiến tập" },
+            { kanji: "食べます", hira: "たべます", meaning: "ăn" },
+            { kanji: "食事", hira: "しょくじ", meaning: "ăn, bữa ăn" },
+            { kanji: "飲みます", hira: "のみます", meaning: "uống" },
+            { kanji: "飲食", hira: "いんしょく", meaning: "ẩm thực" },
+            { kanji: "飲み水", hira: "のみみず", meaning: "nước uống" },
+            { kanji: "休みます", hira: "やすみます", meaning: "nghỉ" },
+            { kanji: "休みの日", hira: "やすみのひ", meaning: "ngày nghỉ" },
+            { kanji: "休日", hira: "きゅうじつ", meaning: "ngày nghỉ" },
+            { kanji: "買います", hira: "かいます", meaning: "mua" },
+            { kanji: "物", hira: "もの", meaning: "đồ vật" },
+            { kanji: "買い物", hira: "かいもの", meaning: "mua sắm" },
+            { kanji: "食べ物", hira: "たべもの", meaning: "đồ ăn" },
+            { kanji: "飲み物", hira: "のみもの", meaning: "đồ uống" },
+            { kanji: "人物", hira: "じんぶつ", meaning: "nhân vật" },
+            { kanji: "見物", hira: "けんぶつ", meaning: "tham quan" },
+            { kanji: "行きます", hira: "いきます", meaning: "đi" },
+            { kanji: "今年", hira: "ことし", meaning: "năm nay" },
+            { kanji: "今日", hira: "きょう", meaning: "hôm nay" },
+            { kanji: "今月", hira: "こんげつ", meaning: "tháng này" },
+            { kanji: "今週", hira: "こんしゅう", meaning: "tuần này" },
+            { kanji: "来ます", hira: "きます", meaning: "đến" },
+            { kanji: "来週", hira: "らいしゅう", meaning: "tuần sau" },
+            { kanji: "来月", hira: "らいげつ", meaning: "tháng sau" },
+            { kanji: "来年", hira: "らいねん", meaning: "năm sau" },
+            { kanji: "来日", hira: "らいにち", meaning: "đến Nhật Bản" },
+            { kanji: "帰ります", hira: "かえります", meaning: "về" },
+            { kanji: "日帰り", hira: "ひがえり", meaning: "đi về trong ngày" },
+            { kanji: "帰国", hira: "きこく", meaning: "về nước" },
+            { kanji: "会います", hira: "あいます", meaning: "gặp" },
+            { kanji: "飲み会", hira: "のみかい", meaning: "nhậu" },
+            { kanji: "国会", hira: "こっかい", meaning: "quốc hội" },
+            { kanji: "会見", hira: "かいけん", meaning: "họp báo" },
+            { kanji: "会社", hira: "かいしゃ", meaning: "công ty" },
+            { kanji: "社会", hira: "しゃかい", meaning: "xã hội" },
+            { kanji: "聞きます", hira: "ききます", meaning: "nghe" },
+            { kanji: "新聞", hira: "しんぶん", meaning: "báo" },
+            { kanji: "読みます", hira: "よみます", meaning: "đọc" },
+            { kanji: "書きます", hira: "かきます", meaning: "viết" },
+            { kanji: "読書", hira: "どくしょ", meaning: "đọc sách" },
+            { kanji: "話します", hira: "はなします", meaning: "nói chuyện" },
+            { kanji: "話", hira: "はなし", meaning: "câu chuyện" },
+            { kanji: "会話", hira: "かいわ", meaning: "hội thoại" },
+            { kanji: "電話", hira: "でんわ", meaning: "điện thoại" },
+            { kanji: "今", hira: "いま", meaning: "bây giờ" }
+        ];
+        let currentIndex = 0;
+
+        function flipCard() {
+            document.querySelector(".flashcard").classList.toggle("flipped");
+        }
+
+        function nextCard() {
+            currentIndex = (currentIndex + 1) % words.length;
+            updateCard();
+        }
+
+        function prevCard() {
+            currentIndex = (currentIndex - 1 + words.length) % words.length;
+            updateCard();
+        }
+
+
+        function updateProgressBar() {
+            const progressBar = document.getElementById("progressBar");
+            const progressText = document.getElementById("progressText");
+
+            // Cập nhật hiển thị số câu hỏi hiện tại so với tổng số câu hỏi
+            progressText.textContent = `${currentIndex + 1} / ${words.length}`;
+
+            // Tính toán độ dài thanh tiến độ
+            const progress = ((currentIndex + 1) / words.length) * 100;
+            progressBar.style.width = progress + "%";
+        }
+
+
+
+        function updateCard() {
+            const cardInner = document.querySelector(".card-inner");
+            const flashcard = document.querySelector(".flashcard");
+
+            // Xóa lớp "flipped" để trở về mặt Kanji
+            flashcard.classList.remove("flipped");
+
+            cardInner.style.opacity = 0; // Bắt đầu hiệu ứng mờ dần
+            setTimeout(() => {
+                document.getElementById("kanji").textContent = words[currentIndex].kanji;
+                document.getElementById("meaning").textContent = words[currentIndex].hira + " - " + words[currentIndex].meaning;
+                cardInner.style.opacity = 1; // Kết thúc hiệu ứng mờ dần
+            }, 300);
+            updateProgressBar();
+        }
+
+
+        function toggleTable() {
+            document.getElementById("wordTableContainer").classList.toggle("hidden");
+        }
+
+        function populateTable() {
+            const tableBody = document.getElementById("wordTable");
+            words.forEach((word, index) => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${word.kanji}</td>
+                    <td>${word.hira}</td>
+                    <td>${word.meaning}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        document.addEventListener("DOMContentLoaded", populateTable);
+
+        document.addEventListener("keydown", function (event) {
+            if (event.key === "ArrowRight") {
+                nextCard();
+            } else if (event.key === "ArrowLeft") {
+                prevCard();
+            } else if (event.key === " ") {
+                flipCard();
+            }
+        });
+    </script>
+</body>
+
+</html>
