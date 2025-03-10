@@ -1,30 +1,25 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Nhật Ôn Tiếng Nhật</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body {
-            background-color: #f8f9fa;
-            font-family: Arial, sans-serif;
-        }
-
-        /* Flashcard */
         .flashcard {
-            width: 40vw;
-            height: 50vh;
+            width: 50vw;
+            height: 60vh;
             perspective: 1000px;
             cursor: pointer;
-            margin: 0 auto;
         }
 
         .card-inner {
             width: 100%;
             height: 100%;
             position: relative;
-            transition: transform 0.6s;
+            transition: transform 0.6s, opacity 0.6s;
+            /* Thêm hiệu ứng mờ dần */
             transform-style: preserve-3d;
         }
 
@@ -41,90 +36,56 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 15px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            font-size: 24px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            font-size: 32px;
+            /* Tăng kích thước font chữ */
             text-align: center;
-            padding: 15px;
         }
 
         .card-front {
-            background-color: #ffffff;
-            border: 2px solid #007bff;
+            background-color: #f8f9fa;
         }
 
         .card-back {
-            background-color: #e9ecef;
-            border: 2px solid #28a745;
+            background-color: #ffebcd;
             transform: rotateY(180deg);
         }
 
-        /* Thanh tiến độ */
+        .hidden {
+            display: none;
+        }
+
         .progress-container {
-            width: 90%;
-            background-color: #e9ecef;
-            border-radius: 10px;
-            margin-bottom: 15px;
+            width: 80%;
+            /* Giảm kích thước chiều rộng */
+            background-color: #f3f3f3;
+            border-radius: 5px;
+            margin-bottom: 10px;
             position: relative;
         }
 
         .progress-bar {
-            height: 8px;
-            background-color: #007bff;
-            border-radius: 10px;
-            transition: width 0.3s ease-in-out;
+            height: 10px;
+            /* Giảm kích thước chiều cao */
+            background-color: #4caf50;
+            width: 0%;
+            border-radius: 5px;
+            transition: width 0.3s;
         }
 
         .progress-text {
             position: absolute;
-            top: -20px;
+            top: -25px;
+            /* Điều chỉnh vị trí của số tiến độ */
             left: 50%;
             transform: translateX(-50%);
-            font-size: 12px;
-            color: #555;
-        }
-
-        /* Nút điều hướng */
-        .btn-group {
-            margin-top: 15px;
-        }
-
-        .btn-nav {
-            font-size: 16px;
-            padding: 8px 15px;
-        }
-
-        /* Bảng từ vựng */
-        .table-responsive {
-            margin-top: 20px;
-        }
-
-        .table {
             font-size: 14px;
-        }
-
-        /* Responsive cho điện thoại nhỏ */
-        @media (max-width: 576px) {
-            .flashcard {
-                width: 90vw;
-                height: 40vh;
-            }
-
-            .card-front, .card-back {
-                font-size: 20px;
-            }
-
-            .progress-text {
-                font-size: 10px;
-            }
-
-            .btn-nav {
-                font-size: 14px;
-                padding: 5px 10px;
-            }
         }
     </style>
 </head>
+
 <body class="d-flex flex-column align-items-center mt-3">
     <header class="mb-3 text-center">
         <h1 class="display-6 text-primary fw-bold">Nhật Ôn Tiếng Nhật</h1>
@@ -154,9 +115,11 @@
 
     <div class="bg-light rounded p-2 mt-2">
         <div class="btn-group" role="group">
-            <input type="radio" class="btn-check" name="wordList" id="sourceRadio" autocomplete="off" checked onchange="useSourceList()">
+            <input type="radio" class="btn-check" name="wordList" id="sourceRadio" autocomplete="off" checked
+                onchange="useSourceList()">
             <label class="btn btn-outline-primary" for="sourceRadio">All words</label>
-            <input type="radio" class="btn-check" name="wordList" id="unknownRadio" autocomplete="off" onchange="useUnknownList()">
+            <input type="radio" class="btn-check" name="wordList" id="unknownRadio" autocomplete="off"
+                onchange="useUnknownList()">
             <label class="btn btn-outline-primary" for="unknownRadio">Unknown list</label>
         </div>
     </div>
@@ -260,8 +223,7 @@
         ];
 
         let currentList = sourse;
-        let unknown = [];
-
+        let unknown = JSON.parse(localStorage.getItem('unknownList')) || [];
 
         let currentIndex = 0;
 
@@ -273,6 +235,7 @@
 
         function clearListUnknown() {
             unknown.length = 0;
+            localStorage.removeItem('unknownList'); // Xóa khỏi localStorage
             currentIndex = 0;
             updateCard();
         }
@@ -356,20 +319,20 @@
             const currentWord = currentList[currentIndex];
             const starIcon = document.getElementById("starIcon");
 
-            // Kiểm tra xem từ đã có trong danh sách unknown chưa
             const existingIndex = unknown.findIndex(word => word.kanji === currentWord.kanji);
 
             if (existingIndex === -1) {
-                // Thêm vào danh sách unknown nếu chưa có
                 unknown.push(currentWord);
-                starIcon.textContent = "★"; // Ngôi sao đã được chọn
-                starIcon.style.color = "#ffc107"; // Màu vàng
+                starIcon.textContent = "★";
+                starIcon.style.color = "#ffc107";
             } else {
-                // Xóa khỏi danh sách unknown nếu đã có
                 unknown.splice(existingIndex, 1);
-                starIcon.textContent = "☆"; // Ngôi sao chưa được chọn
-                starIcon.style.color = "#6c757d"; // Màu xám
+                starIcon.textContent = "☆";
+                starIcon.style.color = "#6c757d";
             }
+
+            // Lưu danh sách unknown vào localStorage
+            localStorage.setItem('unknownList', JSON.stringify(unknown));
         }
 
         function toggleTable() {
