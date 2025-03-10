@@ -276,6 +276,29 @@
                 flipCard();
             }
         });
+
+        // Thêm sự kiện vuốt cho điện thoại
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        function handleTouchStart(event) {
+            touchStartX = event.changedTouches[0].screenX;
+        }
+
+        function handleTouchEnd(event) {
+            touchEndX = event.changedTouches[0].screenX;
+
+            if (touchStartX - touchEndX > 50) {
+                nextCard();  // Vuốt từ phải sang trái (next)
+            }
+
+            if (touchEndX - touchStartX > 50) {
+                prevCard();  // Vuốt từ trái sang phải (prev)
+            }
+        }
+
+        document.querySelector('.flashcard').addEventListener('touchstart', handleTouchStart);
+        document.querySelector('.flashcard').addEventListener('touchend', handleTouchEnd);
     </script>
 </body>
 
